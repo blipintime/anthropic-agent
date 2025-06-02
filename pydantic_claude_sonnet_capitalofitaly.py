@@ -36,28 +36,28 @@ class AgentResponse(BaseModel):
 
 class ClaudeAgent:
     """A simple agent that interacts with Claude 3.7 Sonnet."""
-    
+
     def __init__(self, api_key: Optional[str] = None):
         """Initialize the Claude agent with an API key."""
         self.api_key = api_key or os.environ.get("ANTHROPIC_API_KEY")
         if not self.api_key:
             raise ValueError("ANTHROPIC_API_KEY must be provided either as an argument or as an environment variable")
-        
+
         self.client = anthropic.Anthropic(api_key=self.api_key)
-    
+
     def ask(self, question: str, query_params: Optional[dict] = None) -> AgentResponse:
         """Ask a question to Claude and get a response."""
         # Create a query with default values
         query = AgentQuery(
             messages=[AgentMessage(role="user", content=question)]
         )
-        
+
         # Update with any provided parameters
         if query_params:
             for key, value in query_params.items():
                 if hasattr(query, key):
                     setattr(query, key, value)
-        
+
         # Make the API call
         try:
             response = self.client.messages.create(
@@ -66,16 +66,16 @@ class ClaudeAgent:
                 temperature=query.temperature,
                 messages=[{"role": m.role, "content": m.content} for m in query.messages]
             )
-            
+
             # Extract the answer
             answer = response.content[0].text
-            
+
             # Create and return the response object
             return AgentResponse(
                 answer=answer,
                 raw_response=response.model_dump()
             )
-        
+
         except Exception as e:
             return AgentResponse(
                 answer=f"Error: {str(e)}",
@@ -87,25 +87,25 @@ def main():
     try:
         # Create the agent
         agent = ClaudeAgent()
-        
+
         # Define the question
         question = "What is the capital of Italy?"
-        
+
         print(f"Asking Claude: {question}")
-        
+
         # Get the response
         response = agent.ask(question)
-        
+
         # Display the response
         print("\nClaude's response:")
         print("-" * 50)
         print(response.answer)
         print("-" * 50)
-        
+
         # Optionally, you can access the raw response
         # print("\nRaw response:")
         # print(json.dumps(response.raw_response, indent=2))
-        
+
     except Exception as e:
         print(f"An error occurred: {str(e)}")
 
